@@ -32,6 +32,7 @@ def home():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.form['input']
+    reply = "I'm sorry, I couldn't understand that."  # Default reply
 
     # Query the PDF for information related to the user's input
     pdf_info = query_pdf(user_input)
@@ -59,16 +60,12 @@ def chat():
 
     try:
         chat_response = openai.Completion.create(engine="text-davinci-002", prompt=prompt, max_tokens=150)
-        print(chat_response.choices[0].text)
-        reply = chat_response.choices[0].text.strip()
+        if chat_response.choices and chat_response.choices[0].text:
+            reply = chat_response.choices[0].text.strip()
     except Exception as e:
         reply = f"Error: {str(e)}"
 
-    if not reply:
-        reply = "I'm sorry, I couldn't understand that."
-
     return render_template('index.html', reply=reply)
-
 
 def query_pdf(query):
     result = ""
