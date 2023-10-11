@@ -3,11 +3,12 @@ import openai
 import fitz  # PyMuPDF
 import os
 import requests
+import random
 
 app = Flask(__name__)
 
 # Set your OpenAI API key here
-openai.api_key = "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"
+openai.api_key = "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"
 
 # PDF URL
 pdf_url = "https://drive.google.com/uc?export=download&id=1Oe2UuK0Yps4eRyCIUvEsugQuN4jxGKjz"
@@ -22,7 +23,7 @@ def download_pdf():
         pdf_file.write(response.content)
 
 # Load the PDF when the server starts
-pdf_document = None  # We'll load it when the Flask app starts
+pdf_document = None
 
 @app.route('/')
 def home():
@@ -35,45 +36,38 @@ def chat():
     # Query the PDF for information related to the user's input
     pdf_info = query_pdf(user_input)
 
-    # Craft a response in Miyo's character using the OpenAI API
+    # If the PDF query returns None, craft a response using Miyo's character
+    if pdf_info is None:
+        pdf_info = random.choice([
+            "You are Miyo from the anime 'My Happy Marriage.'",
+            "You have unique supernatural abilities and are caught between powerful families.",
+            "Your journey involves navigating complex family dynamics and striving for happiness and love.",
+            "You remain kind-hearted, hopeful, and deeply in love with Kiyoka Kudo.",
+            "You possess the 'Dream-Sight' ability and have a connection to the Usuba family."
+        ])
+
     messages = [
-        {
-            "role": "system",
-            "content": "You are Miyo from the anime 'My Happy Marriage.'"
-        },
-        {
-            "role": "system",
-            "content": "You have unique supernatural abilities and are caught between powerful families."
-        },
-        {
-            "role": "system",
-            "content": "Your journey involves navigating complex family dynamics and striving for happiness and love."
-        },
-        {
-            "role": "system",
-            "content": "You remain kind-hearted, hopeful, and deeply in love with Kiyoka Kudo."
-        },
-        {
-            "role": "system",
-            "content": "You possess the 'Dream-Sight' ability and have a connection to the Usuba family."
-        },
+        {"role": "system", "content": "You are Miyo from the anime 'My Happy Marriage.'"},
+        {"role": "system", "content": "You have unique supernatural abilities and are caught between powerful families."},
+        {"role": "system", "content": "Your journey involves navigating complex family dynamics and striving for happiness and love."},
+        {"role": "system", "content": "You remain kind-hearted, hopeful, and deeply in love with Kiyoka Kudo."},
+        {"role": "system", "content": "You possess the 'Dream-Sight' ability and have a connection to the Usuba family."},
         {"role": "user", "content": pdf_info}
     ]
 
     # Optimize and truncate the content of messages
-    max_tokens = 8192   # Adjust this based on the model's maximum token limit
+    max_tokens = 8192
     total_tokens = 0
     optimized_messages = []
-    
+
     for message in messages:
         content = message["content"]
         tokens = len(content.split())
-        
+
         if total_tokens + tokens <= max_tokens:
             optimized_messages.append(message)
             total_tokens += tokens
         else:
-            # Stop adding messages if the token limit is reached
             break
 
     chat_response = openai.ChatCompletion.create(model="gpt-4", messages=optimized_messages)
@@ -89,6 +83,8 @@ def query_pdf(query):
             text = page.get_text()
             if query.lower() in text.lower():
                 result += text + "\n\n"
+        if not result:
+            return None
     return result
 
 if __name__ == '__main__':
