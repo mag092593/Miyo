@@ -8,7 +8,7 @@ import random
 app = Flask(__name__)
 
 # Set your OpenAI API key here
-openai.api_key = "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"
+openai.api_key = "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"
 
 # PDF URL
 pdf_url = "https://drive.google.com/uc?export=download&id=1Oe2UuK0Yps4eRyCIUvEsugQuN4jxGKjz"
@@ -37,7 +37,7 @@ def chat():
     pdf_info = query_pdf(user_input)
 
     # If the PDF query returns None, craft a response using Miyo's character
-    if pdf_info is None:
+    if pdf_info is None or pdf_info == "":
         pdf_info = random.choice([
             "You are Miyo from the anime 'My Happy Marriage.'",
             "You have unique supernatural abilities and are caught between powerful families.",
@@ -55,25 +55,20 @@ def chat():
         {"role": "user", "content": pdf_info}
     ]
 
-    # Optimize and truncate the content of messages
-    max_tokens = 8192
-    total_tokens = 0
-    optimized_messages = []
+    prompt = "\n".join([msg["content"] for msg in messages])
 
-    for message in messages:
-        content = message["content"]
-        tokens = len(content.split())
+    try:
+        chat_response = openai.Completion.create(engine="text-davinci-002", prompt=prompt, max_tokens=150)
+        print(chat_response.choices[0].text)
+        reply = chat_response.choices[0].text.strip()
+    except Exception as e:
+        reply = f"Error: {str(e)}"
 
-        if total_tokens + tokens <= max_tokens:
-            optimized_messages.append(message)
-            total_tokens += tokens
-        else:
-            break
-
-    chat_response = openai.ChatCompletion.create(model="gpt-4", messages=optimized_messages)
-    reply = chat_response.choices[0].message.content
+    if not reply:
+        reply = "I'm sorry, I couldn't understand that."
 
     return render_template('index.html', reply=reply)
+
 
 def query_pdf(query):
     result = ""
