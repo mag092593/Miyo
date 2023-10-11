@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 import openai
 import fitz  # PyMuPDF
 import os
@@ -65,7 +65,7 @@ def chat():
     except Exception as e:
         reply = f"Error: {str(e)}"
 
-    return render_template('index.html', reply=reply)
+    return jsonify({"reply": reply})
 
 def query_pdf(query):
     result = ""
