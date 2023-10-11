@@ -7,7 +7,7 @@ import requests
 app = Flask(__name__)
 
 # Set your OpenAI API key here
-openai.api_key = "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"
+openai.api_key = "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"
 
 # PDF URL
 pdf_url = "https://drive.google.com/uc?export=download&id=1Oe2UuK0Yps4eRyCIUvEsugQuN4jxGKjz"
